@@ -2,12 +2,15 @@
 #----------------------------------------------------------------------------
 # created by: snow
 # repo: https://github.com/penguin806/HuaweiCourseDocumentDownloader
-# version: 1.0
+# version: 1.1
 # ---------------------------------------------------------------------------
 import datetime
 import gzip
 import os
 import requests
+from svglib.svglib import svg2rlg
+from reportlab.graphics import renderPDF
+from PyPDF2 import PdfMerger
 
 
 projectId = '____PROJECT_ID_HERE____'
@@ -78,12 +81,23 @@ def getDocumentSpecifiedPage(pageNum, totalPage):
         raise Exception('getDocumentSpecifiedPage failed: ' + response.text)
 
 
-def savePageAsSvgFile(containerDir, svgContent, pageNum):
-    fileName = containerDir + str(pageNum) + '.svg'
-    with open(fileName, 'wb') as f:
-        f.write(svgContent)
+def savePageAsSvgFile(pageContent, outputSvgFileName):
+    with open(outputSvgFileName, 'wb') as svgOutputFile:
+        svgOutputFile.write(pageContent)
+        return outputSvgFileName
 
 
+def convertSvgToPdf(svgFileName, outputPdfFileName):
+    drawing = svg2rlg(svgFileName, resolve_entities = False)
+    renderPDF.drawToFile(drawing, outputPdfFileName)
+    return outputPdfFileName
+
+def mergePDFs(pdfList, finalPdfFileName):
+    merger = PdfMerger()
+    for pdf in pdfList:
+        merger.append(pdf)
+    merger.write(finalPdfFileName)
+    merger.close()
 
 if __name__ == '__main__':
     print(r'''
@@ -113,14 +127,20 @@ if __name__ == '__main__':
             os.makedirs(containerDir)
         print('The document files will be saved to: ' + containerDir)
 
+        pdfFileList = []
         for currentPage in range(1, totalPage + 1):
             pageContent = getDocumentSpecifiedPage(currentPage, totalPage)
-            savePageAsSvgFile(containerDir, pageContent, currentPage)
+            svgFile = savePageAsSvgFile(pageContent, outputSvgFileName = containerDir + str(currentPage) + '.svg')
+            pdfFileList.append(convertSvgToPdf(svgFile, outputPdfFileName = containerDir + str(currentPage) + '.pdf'))
             print(f'Retrieve Page {currentPage} of {totalPage}...  OK')
 
-        # Todo: Combine all svg files into pdf
+        finalPdfFileName = containerDir + documentId + '.pdf'
+        print('Merging PDF files to: ' + finalPdfFileName)
+        mergePDFs(pdfFileList, finalPdfFileName)
 
         print('-------------- Download Finished --------------')
 
     except Exception as e:
+        print('-------------- Download Failed --------------')
+        print(type(e))
         print(e)
