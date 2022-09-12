@@ -86,14 +86,32 @@ def savePageAsSvgFile(containerDir, svgContent, pageNum):
 
 
 if __name__ == '__main__':
+    print(r'''
+      ___           ___           ___           ___     
+     /\  \         /\__\         /\  \         /\__\    
+    /::\  \       /::|  |       /::\  \       /:/ _/_   
+   /:/\ \  \     /:|:|  |      /:/\:\  \     /:/ /\__\  
+  _\:\~\ \  \   /:/|:|  |__   /:/  \:\  \   /:/ /:/ _/_ 
+ /\ \:\ \ \__\ /:/ |:| /\__\ /:/__/ \:\__\ /:/_/:/ /\__\
+ \:\ \:\ \/__/ \/__|:|/:/  / \:\  \ /:/  / \:\/:/ /:/  /
+  \:\ \:\__\       |:/:/  /   \:\  /:/  /   \::/_/:/  / 
+   \:\/:/  /       |::/  /     \:\/:/  /     \:\/:/  /  
+    \::/  /        /:/  /       \::/  /       \::/  /   
+     \/__/         \/__/         \/__/         \/__/    
+    ''')
+    print('-------------- Download Started --------------')
+    print('Project ID: ' + projectId)
+    print('Document ID: ' + documentId)
+
     try:
         docParams = getDocumentParameters()
         totalPage = docParams['totalPage']
-        print('documentId: ' + documentId + '\ntotalPage: ' + str(totalPage))
+        print('totalPage: ' + str(totalPage))
 
         containerDir = savePath + documentId + '_' + datetime.datetime.now().strftime('%Y%m%d%H%M%S') + '/'
         if not os.path.exists(containerDir):
             os.makedirs(containerDir)
+        print('The document files will be saved to: ' + containerDir)
 
         for currentPage in range(1, totalPage + 1):
             pageContent = getDocumentSpecifiedPage(currentPage, totalPage)
@@ -101,6 +119,8 @@ if __name__ == '__main__':
             print(f'Retrieve Page {currentPage} of {totalPage}...  OK')
 
         # Todo: Combine all svg files into pdf
+
+        print('-------------- Download Finished --------------')
 
     except Exception as e:
         print(e)
