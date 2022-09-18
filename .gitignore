@@ -12,6 +12,7 @@ build/
 develop-eggs/
 dist/
 downloads/
+snow_downloads/
 eggs/
 .eggs/
 lib/

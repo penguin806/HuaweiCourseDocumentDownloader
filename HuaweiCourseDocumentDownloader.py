@@ -130,7 +130,7 @@ if __name__ == '__main__':
         pdfFileList = []
         for currentPage in range(1, totalPage + 1):
             pageResponse = getDocumentSpecifiedPage(currentPage, totalPage)
-            suffixType = pageResponse.headers['Content-Disposition'].split('.')[1]
+            suffixType = pageResponse.headers['Content-Disposition'].split('.')[-1]
             if suffixType == 'gz':
                 svgFileName = savePageToDisk(gzip.decompress(pageResponse.content), containerDir + str(currentPage) + '.svg')
                 pdfFileName = convertSvgToPdf(svgFileName, containerDir + str(currentPage) + '.pdf')
