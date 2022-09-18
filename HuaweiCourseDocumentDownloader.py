@@ -2,7 +2,7 @@
 #----------------------------------------------------------------------------
 # created by: snow
 # repo: https://github.com/penguin806/HuaweiCourseDocumentDownloader
-# version: 1.1
+# version: 1.2
 # ---------------------------------------------------------------------------
 import datetime
 import gzip
@@ -76,12 +76,12 @@ def getDocumentSpecifiedPage(pageNum, totalPage):
 
     response = requests.post(url, params = requestParams, headers = requestHeaders, json = dataToPost)
     if response.status_code == 200:
-        return gzip.decompress(response.content)
+        return response
     else:
         raise Exception('getDocumentSpecifiedPage failed: ' + response.text)
 
 
-def savePageAsSvgFile(pageContent, outputSvgFileName):
+def savePageToDisk(pageContent, outputSvgFileName):
     with open(outputSvgFileName, 'wb') as svgOutputFile:
         svgOutputFile.write(pageContent)
         return outputSvgFileName
@@ -129,9 +129,21 @@ if __name__ == '__main__':
 
         pdfFileList = []
         for currentPage in range(1, totalPage + 1):
-            pageContent = getDocumentSpecifiedPage(currentPage, totalPage)
-            svgFile = savePageAsSvgFile(pageContent, outputSvgFileName = containerDir + str(currentPage) + '.svg')
-            pdfFileList.append(convertSvgToPdf(svgFile, outputPdfFileName = containerDir + str(currentPage) + '.pdf'))
+            pageResponse = getDocumentSpecifiedPage(currentPage, totalPage)
+            suffixType = pageResponse.headers['Content-Disposition'].split('.')[1]
+            if suffixType == 'gz':
+                svgFileName = savePageToDisk(gzip.decompress(pageResponse.content), containerDir + str(currentPage) + '.svg')
+                pdfFileName = convertSvgToPdf(svgFileName, containerDir + str(currentPage) + '.pdf')
+                pdfFileList.append(pdfFileName)
+            elif suffixType == 'svg':
+                svgFileName = savePageToDisk(pageResponse.content, containerDir + str(currentPage) + '.svg')
+                pdfFileName = convertSvgToPdf(svgFileName, containerDir + str(currentPage) + '.pdf')
+                pdfFileList.append(pdfFileName)
+            elif suffixType == 'pdf':
+                pdfFileName = savePageToDisk(pageResponse.content, containerDir + str(currentPage) + '.pdf')
+                pdfFileList.append(pdfFileName)
+            else:
+                raise Exception('Unknown suffix type: ' + suffixType)
             print(f'Retrieve Page {currentPage} of {totalPage}...  OK')
 
         finalPdfFileName = containerDir + documentId + '.pdf'
